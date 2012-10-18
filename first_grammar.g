@@ -5,6 +5,7 @@ grammar first_grammar;
 // В LL анализе нет места левосторонней рекрсии. Анталер умеет убирать левую рекрсию рефактором
 // Дома добавит возведение в степень и плавающую точку (на паре допилить все остальное)
 // Возведение в степень имеет другую ассоциативность
+// Нормально ли поведение при 1+-(1)?
 
 WS  : ( ' '| '\t'| '\r'| '\n') {$channel=HIDDEN;};
 
@@ -16,7 +17,7 @@ FLOAT : INT '.' INT* EXP? | '.' INT EXP? | INT EXP;
 fragment EXP : ('e'|'E') PM? INT;
 
 axiom : expr EOF;
-expr  : PM ? term (PM term)*;
+expr  : PM? term (PM term)*;
 term  : pow (MD pow)*;
 pow   : atom ('**' expr)*;
-atom  : INT | FLOAT | '('expr')';
+atom  : INT | FLOAT | PM? '('expr')';
