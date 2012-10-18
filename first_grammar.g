@@ -1,21 +1,22 @@
 grammar first_grammar;
 
-// Здесь без фанатизма раотают регвыры
+// Здесь без фанатизма работают регвыры
 // Большие буквы относятся к лексическому анализу, меленькие к синтаксису
 // В LL анализе нет места левосторонней рекрсии. Анталер умеет убирать левую рекрсию рефактором
 // Дома добавит возведение в степень и плавающую точку (на паре допилить все остальное)
 // Возведение в степень имеет другую ассоциативность
 
-input: expr EOF;
-expr : PM ? term (PM term)*;
-term : pow (MD pow)*;
-pow  : atom ('**' expr)*;
-atom: INT | FLOAT | '(' expr ')';
-// factor : ('+' | '-') factor | atom
-//atom : INT | '(' expr ')';
+WS  : ( ' '| '\t'| '\r'| '\n') {$channel=HIDDEN;};
+
+PM  : '+'|'-';
+MD  : '*'|'/';
+
 INT : ('0'..'9')+;
-PM: '+'|'-';
-MD : '*'|'/';
-WS : ( ' '| '\t'| '\r'| '\n') {$channel=HIDDEN;};
 FLOAT : INT '.' INT* EXP? | '.' INT EXP? | INT EXP;
 fragment EXP : ('e'|'E') PM? INT;
+
+axiom : expr EOF;
+expr  : PM ? term (PM term)*;
+term  : pow (MD pow)*;
+pow   : atom ('**' expr)*;
+atom  : INT | FLOAT | '('expr')';
