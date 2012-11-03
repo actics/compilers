@@ -1,5 +1,5 @@
 micc_name := MAX_INPUT_CHARS
-max_input_chars := 10
+max_input_chars := 100
 
 const_flags_value := $(max_input_chars)
 
@@ -30,9 +30,4 @@ build :
 	antlr3 -o $(autogen_dir) $(grammar_name_full)
 	mv $(addsuffix /grammar/*, $(autogen_dir)) $(autogen_dir)
 	rm -rf $(addsuffix /grammar, $(autogen_dir))
-	g++ -o $(notation_name) $(notation_name_full) $(autogen_source_full) $(compile_flags) $(const_flags)
-run:
-	echo "На вход подается содержимое файла " $(input_name)
-	cat $(input_name)
-	echo "Обратная польская нотация"
-	$(notation_name_full) $(input_name)
+	g++ -o $(notation_name) $(notation_name_full) $(autogen_source_full) $(compile_flags) $(const_flags)h
