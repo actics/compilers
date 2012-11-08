@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <iostream>
 #include <string.h>
 
 #include "./grammar/autogen/ArithmeticExpressionParser.h"
@@ -15,36 +15,29 @@
 )
      
 int main(int argc, char * argv[]) {
+    std::string                 input_string;
+    pANTLR3_UINT8               input_str;
     pANTLR3_INPUT_STREAM        input;
-    pArithmeticExpressionLexer  lex;
+    pArithmeticExpressionLexer  lexer;
     pANTLR3_COMMON_TOKEN_STREAM tokens;
     pArithmeticExpressionParser parser;
     
-    char input_string[MAX_INPUT_CHARS + 1];
-    fgets (input_string , MAX_INPUT_CHARS + 1, stdin);
-    
-	pANTLR3_UINT8 input_str = (pANTLR3_UINT8) input_string;
-	input = NEW_STRING_STREAM(input_str, "standard input");
-
-	if (input == (pANTLR3_INPUT_STREAM) ANTLR3_ERR_NOMEM ) { 
-		fprintf(stderr, "no memory\n");
-		exit(EXIT_FAILURE);
-	}
-	else if (input == (pANTLR3_INPUT_STREAM)ANTLR3_ERR_NOFILE) { 
-		fprintf(stderr, "file not found\n");
-		exit(EXIT_FAILURE);
-	}
+    while (1) {
+        std::getline(std::cin, input_string);
+	    input_str = (pANTLR3_UINT8) input_string.c_str();
+	    input = NEW_STRING_STREAM(input_str, "standard input");
 	
-    lex    = ArithmeticExpressionLexerNew(input);
-    tokens = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lex));
-    parser = ArithmeticExpressionParserNew(tokens);
+        lexer  = ArithmeticExpressionLexerNew(input);
+        tokens = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lexer));
+        parser = ArithmeticExpressionParserNew(tokens);
 
-    parser ->axiom(parser);
+        parser ->axiom(parser);
 
-    parser ->free(parser);
-    tokens ->free(tokens);
-    lex    ->free(lex);
-    input  ->close(input);
-
+        parser ->free(parser);
+        tokens ->free(tokens);
+        lexer  ->free(lexer);
+        input  ->close(input);
+        input_string.erase();
+    }
     return 0;
 }

@@ -1,5 +1,5 @@
 micc_name := MAX_INPUT_CHARS
-max_input_chars := 100
+max_input_chars := 10
 
 const_flags_value := $(max_input_chars)
 
@@ -29,5 +29,5 @@ notation_name_full  := $(addprefix $(source_dir)/, $(addsuffix .c, $(notation_na
 build : 
 	antlr3 -o $(autogen_dir) $(grammar_name_full)
 	mv $(addsuffix /grammar/*, $(autogen_dir)) $(autogen_dir)
-	rm -rf $(addsuffix /grammar, $(autogen_dir))
+	rm -rf $(addsuffix /grammar, $(autogen_dir)) grammar/output
 	g++ -o $(notation_name) $(notation_name_full) $(autogen_source_full) $(compile_flags) $(const_flags)

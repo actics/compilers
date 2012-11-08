@@ -1,7 +1,5 @@
 grammar ArithmeticExpression;
 
-// Ввод в строчку через ;
-
 options {
     language = C;
 }
@@ -52,7 +50,7 @@ fragment EXP : ('e'|'E') (PLS | MNS)? INT;
 VARIABLE : START_SYMBOL (START_SYMBOL | '0'..'9')* ;
 fragment START_SYMBOL : 'a'..'z' | 'A'..'Z' | '_' ;
 
-axiom : (def_var | print_expr) (';' (def_var | print_expr))* EOF ;
+axiom : (def_var | print_expr)? EOF ;
 
 def_var : VARIABLE ASSIGMENT a=arith_expr {variables[std::string((const char *)$VARIABLE.text->chars)] = a;};
 
@@ -61,32 +59,32 @@ print_expr : PRINT_KEYW a=arith_expr {printf("\%f\n", a);};
 arith_expr returns [float value]
     :   PLS? t1=term              {$value = t1;}
         (
-            (PLS t2=term          {$value = t1 + t2;})
+            PLS t2=term           {$value += t2;}
         |
-            (MNS t2=term          {$value = t1 - t2;})
+            MNS t2=term           {$value -= t2;}
         )* 
     |   
-        MNS t1=term               {$value = t1;}
+        MNS t1=term               {$value = -t1;}
         (
-            (PLS t2=term          {$value = -t1 + t2;})
+            PLS t2=term           {$value += t2;}
         |
-            (MNS t2=term          {$value = -t1 - t2;})
+            MNS t2=term           {$value -= t2;}
         )* 
     ;
-   
+
 term returns [float value]
     :   p1=power                  {$value = p1;}
         (                         options{greedy=true;}:
-            (MLP p2=power         {$value = p1 * p2;})
+            (MLP p2=power         {$value *= p2;})
         |
-            (DIV p2=power         {$value = p1 / p2;})
+            (DIV p2=power         {$value /= p2;})
         )*
     ;
 
 power returns [float value]
     :   a=atom                    {$value = a;}
         (                         options{greedy=true;}:
-           PWR p=power            {$value = pow(a, p);}
+           PWR p=power            {$value = pow($value, p);}
         )*
     ;
 
