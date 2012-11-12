@@ -1,4 +1,4 @@
 *.d
 *.tokens
-/notation
-/grammar/autogen
+interpreter
+/antlrgen
