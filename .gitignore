@@ -1,4 +1,6 @@
+*~
+*.o
 *.d
 *.tokens
-/notation
+/interpreter
 /grammar/autogen

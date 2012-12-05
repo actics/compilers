@@ -27,7 +27,7 @@ options {
     }
 }
 
-WS  : ( ' '| '\t'| '\r' | '\n' ) {$channel=HIDDEN;};
+WS  : ( ' '| '\t'| '\r' ) {$channel=HIDDEN;};
 
 LBR :  '(' ;
 RBR :  ')' ;
@@ -40,6 +40,8 @@ PWR :  '^' ;
 ASSIGMENT : '=' ;
 PRINT_KEYW : 'print' ;
 
+SEP : '\n' | ';' ;
+
 INT :  ('0'..'9')+;
 FLOAT :  INT '.' INT* EXP? 
       |  '.' INT EXP?
@@ -50,10 +52,11 @@ fragment EXP : ('e'|'E') (PLS | MNS)? INT;
 VARIABLE : START_SYMBOL (START_SYMBOL | '0'..'9')* ;
 fragment START_SYMBOL : 'a'..'z' | 'A'..'Z' | '_' ;
 
-axiom : (def_var | print_expr)? EOF ;
+axiom : lines EOF ;
+lines : line SEP lines? ;
+line  : (def_var | print_expr)? ;
 
 def_var : VARIABLE ASSIGMENT a=arith_expr {variables[std::string((const char *)$VARIABLE.text->chars)] = a;};
-
 print_expr : PRINT_KEYW a=arith_expr {printf("\%f\n", a);};
 
 arith_expr returns [float value]
