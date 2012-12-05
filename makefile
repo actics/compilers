@@ -30,4 +30,4 @@ build :
 	antlr3 -o $(autogen_dir) $(grammar_name_full)
 	mv $(addsuffix /grammar/*, $(autogen_dir)) $(autogen_dir)
 	rm -rf $(addsuffix /grammar, $(autogen_dir))
-	g++ -o $(notation_name) $(notation_name_full) $(autogen_source_full) $(compile_flags) $(const_flags)h
+	g++ -o $(notation_name) $(notation_name_full) $(autogen_source_full) $(compile_flags) $(const_flags)
