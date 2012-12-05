@@ -31,8 +31,9 @@ options {
         variables[std::string((const char *) t->toString(t)->chars)] = v;
     }
 }
+axiom : (line)+;
 
-axiom
+line
     : ^(ASSIGMENT VARIABLE a=arith_expr) {add_var((pANTLR3_BASE_TREE) $VARIABLE, a);}
     | ^(PRINT_KEYW a=arith_expr)         {printf("\%f\n", a);}
     ;
