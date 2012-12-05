@@ -1,3 +1,0 @@
-Cхема работы компилятора:
-
-lexer (лексический анализ) ->  (token string) -> синтаксический разбор (parser) -> дерево разбора (parse tree) -> AST (abstract sintasis tree) -> codegenerate -> assembly -> binary
