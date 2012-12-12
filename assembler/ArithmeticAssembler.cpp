@@ -1,4 +1,4 @@
-#include "ArithmeticInterpreterAssembler.hpp"
+#include "ArithmeticAssembler.hpp"
 
 ArithmeticInterpreterAssembler::~ArithmeticInterpreterAssembler() {}
 
@@ -30,12 +30,13 @@ std::string ArithmeticInterpreterAssembler::getCode() {
     head << "section .bss"          << std::endl;
     head << "variables resq " << this->stack_count << std::endl;
     head << "section .data"         << std::endl;
-    head << "scanf_format '\%f', 0" << std::endl;
+    head << "scanf_format db  '\%lf', 0" << std::endl;
+    head << "printf_format db '\%lf', 10, 0" << std::endl;
     head << "section .text"         << std::endl;
     head << this->expressions;
     head << "_start:"               << std::endl;
-    head << "sub rsp, 0x18"         << std::endl;
     head << "mov rbp, rsp"          << std::endl;
+    head << "sub rsp, 0x20"         << std::endl;
     
     std::ostringstream tail;
     tail << "mov rax, 60" << std::endl;
@@ -53,10 +54,10 @@ void ArithmeticInterpreterAssembler::scanVariable(std::string varname) {
     }
     this->code << "lea rsi, [variables+8*" << variable_count << "]" << std::endl;
     this->code << "mov rdi, scanf_format" << std::endl;
-    this->code << "call scanf" << std::endl;
+    this->code << "xor rax, rax" << std::endl;
+    this->code << "call scanf"   << std::endl;
 }
 
-    
 void ArithmeticInterpreterAssembler::assigmentVariable(std::string varname, std::string function_name) {
     int variable_count = this->getVariableCount(varname);
     if (variable_count < 0) {
@@ -66,3 +67,13 @@ void ArithmeticInterpreterAssembler::assigmentVariable(std::string varname, std:
     this->code << "call " << function_name << std::endl;
     this->code << "mov qword [variables+8*" << variable_count << "], rax" << std::endl;
 }
+
+void ArithmeticInterpreterAssembler::printExpression(std::string function_name) {
+    this->code << "call " << function_name << std::endl;
+    this->code << "mov [rsp-8], rax" << std::endl;
+    this->code << "movsd xmm0, [rsp-8]" << std::endl;
+    this->code << "mov rdi, printf_format" << std::endl;
+    this->code << "mov rax, 1" << std::endl;
+    this->code << "call printf" << std::endl;
+}
+

@@ -5,26 +5,26 @@
 #include <sstream>
 #include <cmath>
 #include <cstdlib>
+#include <cstdio>
 
 class ArithmeticExpressionAssembler {
     private:
-        int stack_count;
+        static int expression_count;
         std::ostringstream code;
-        int action(const char*, int, int);
+        void action(const char*);
         
     public:
-        static int expression_count;
         ArithmeticExpressionAssembler();
         ~ArithmeticExpressionAssembler();
         std::string getExpressionName();
         std::string getCode();
         void newExpression();
-        int add(int, int);
-        int sub(int, int);
-        int mul(int, int);
-        int div(int, int);
-        int pow(int, int);
-        int changeSign(int);
-        int pushConst(double);
-        int pushVariable(int);
+        void add();
+        void sub();
+        void mul();
+        void div();
+        void pow();
+        void changeSign(int);
+        void pushConst(double);
+        void pushVariable(int);
 };

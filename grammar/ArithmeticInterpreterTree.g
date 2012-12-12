@@ -13,23 +13,23 @@ options {
     #include <string>
     #include <sstream>
     #include <map>
-    #include "./../../ArithmeticExpressionAssembler.hpp"
-    #include "./../../ArithmeticInterpreterAssembler.hpp"
+    #include "./../../assembler/ArithmeticExpressionAssembler.hpp"
+    #include "./../../assembler/ArithmeticAssembler.hpp"
 }
 
 @members {
     ArithmeticExpressionAssembler expression;
     ArithmeticInterpreterAssembler interpreter;
     
-    int pushConst(pANTLR3_BASE_TREE tree) {
+    void pushConst(pANTLR3_BASE_TREE tree) {
         double value = atof((const char*) tree->toString(tree)->chars);
-        return expression.pushConst(value);
+        expression.pushConst(value);
     }
     
-    int pushVariable(pANTLR3_BASE_TREE tree) {
+    void pushVariable(pANTLR3_BASE_TREE tree) {
         std::string varname((const char*) tree->toString(tree)->chars);
         int variable_count = interpreter.getVariableCount(varname);
-        return expression.pushVariable(variable_count);
+        expression.pushVariable(variable_count);
     }
     
     void assigmentVariable(pANTLR3_BASE_TREE tree) {
@@ -40,7 +40,9 @@ options {
     }
     
     void printExpression() {
-        
+        interpreter.printExpression(expression.getExpressionName());
+        interpreter.setExpression(expression.getCode());
+        expression.newExpression();
     }
     
     void scanVariable(pANTLR3_BASE_TREE tree) {
@@ -50,22 +52,22 @@ options {
     
 }
 
-axiom : (line)+ {std::cout<<interpreter.getCode();};
+axiom returns [std::string code] : (line)+ {code = interpreter.getCode();};
 
 line
-    : ^(ASSIGMENT VARIABLE a=arith_expr) { assigmentVariable($VARIABLE); }
-    | ^(PRINT_KEYW a=arith_expr)         { printExpression();            }
-    | ^(SCAN_KEYW VARIABLE)              { scanVariable($VARIABLE);      }
+    : ^(ASSIGMENT VARIABLE arith_expr) { assigmentVariable($VARIABLE); }
+    | ^(PRINT_KEYW arith_expr)         { printExpression();            }
+    | ^(SCAN_KEYW VARIABLE)            { scanVariable($VARIABLE);      }
     ;
 
-arith_expr returns [int pos]
-    : ^(PLS e1=arith_expr {pos = e1;} (e2=arith_expr { pos = expression.add(pos, e2); })?)
-    | ^(MNS e1=arith_expr {pos = expression.changeSign(e1);} (e2=arith_expr { pos = expression.sub(pos, e2); })?)
-    | ^(MLP e1=arith_expr e2=arith_expr) {pos = expression.mul(e1, e2);}
-    | ^(DIV e1=arith_expr e2=arith_expr) {pos = expression.div(e1, e2);}
-    | ^(PWR e1=arith_expr e2=arith_expr) {pos = expression.pow(e1, e2);}
-    | INT   { pos = pushConst($INT); }
-    | FLOAT { pos = pushConst($FLOAT); }
-    | VARIABLE { pos = pushVariable($VARIABLE);}
+arith_expr
+    : ^(PLS arith_expr ( arith_expr { expression.add(); } )? )
+    | ^(MNS arith_expr {expression.changeSign(0);} ( arith_expr { expression.sub(); } )? )
+    | ^(MLP arith_expr arith_expr) { expression.mul(); }
+    | ^(DIV arith_expr arith_expr) { expression.div(); }
+    | ^(PWR arith_expr arith_expr) { expression.pow(); }
+    | INT      { pushConst($INT);         }
+    | FLOAT    { pushConst($FLOAT);       }
+    | VARIABLE { pushVariable($VARIABLE); }
     ;
 

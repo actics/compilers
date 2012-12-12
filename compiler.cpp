@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string.h>
 
 #include "./antlrgen/grammar/ArithmeticInterpreterParser.h"
@@ -16,9 +17,6 @@
 )
      
 int main(int argc, char * argv[]) {
-    std::string                     input_line;
-    std::string                     input_string;
-    pANTLR3_UINT8                   input_str;
     pANTLR3_INPUT_STREAM            input;
     pArithmeticInterpreterLexer     lexer;
     pArithmeticInterpreterParser    parser;
@@ -27,37 +25,27 @@ int main(int argc, char * argv[]) {
     pANTLR3_COMMON_TREE_NODE_STREAM nodes;
     pArithmeticInterpreterTree      walker;
     
-    ArithmeticInterpreterParser_axiom_return axiom_return;
-    
-    while (std::getline(std::cin, input_line)) {
-        input_string += input_line + "\n";
-    }
-    
-    input_str = (pANTLR3_UINT8) input_string.c_str();
-    input = NEW_STRING_STREAM(input_str, "standard input");
+    input = antlr3AsciiFileStreamNew((pANTLR3_UINT8) argv[1]);
 
     lexer  = ArithmeticInterpreterLexerNew(input);
     tokens = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lexer));
     parser = ArithmeticInterpreterParserNew(tokens);
 
-    axiom_return = parser->axiom(parser);
-    tree = axiom_return.tree;
-    
-    printf("< %s >\n", (const char *) tree->toStringTree(tree)->chars);
-    
-    nodes = antlr3CommonTreeNodeStreamNewTree(tree, ANTLR3_SIZE_HINT);
-    
+    tree   = parser->axiom(parser).tree;
+    nodes  = antlr3CommonTreeNodeStreamNewTree(tree, ANTLR3_SIZE_HINT);
     walker = ArithmeticInterpreterTreeNew(nodes);
     
-    walker->axiom(walker);
+    std::string code = walker->axiom(walker);
+    std::ofstream nasm_file;
+    nasm_file.open(argv[2]);
+    nasm_file << code;
+    nasm_file.close();
     
     walker ->free(walker);
     nodes  ->free(nodes);
-    //tree   ->free(tree);
     parser ->free(parser);
     tokens ->free(tokens);
     lexer  ->free(lexer);
     input  ->close(input);
-    input_string.erase();
     return 0;
 }

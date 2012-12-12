@@ -19,6 +19,6 @@ class ArithmeticInterpreterAssembler {
         int getVariableCount(std::string);
         void scanVariable(std::string);
         void assigmentVariable(std::string, std::string);
-        void printExpression();
+        void printExpression(std::string);
         std::string getCode();
 };
