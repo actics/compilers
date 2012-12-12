@@ -1,51 +1,71 @@
 tree grammar ArithmeticInterpreterTree;
 
 options {
-    tokenVocab=ArithmeticInterpreter;
-    ASTLabelType=pANTLR3_BASE_TREE;
+    tokenVocab = ArithmeticInterpreter;
+    ASTLabelType = pANTLR3_BASE_TREE;
     language = C;
 }
 
 @includes {
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <math.h>
+    #include <iostream>
+    #include <cstdlib>
+    #include <cmath>
     #include <string>
+    #include <sstream>
     #include <map>
+    #include "./../../ArithmeticExpressionAssembler.hpp"
+    #include "./../../ArithmeticInterpreterAssembler.hpp"
 }
 
 @members {
-    std::map<std::string, float> variables = std::map<std::string, float>();
+    ArithmeticExpressionAssembler expression;
+    ArithmeticInterpreterAssembler interpreter;
     
-    static float get_var(pANTLR3_BASE_TREE t) {
-        std::string tname = std::string((const char *) t->toString(t)->chars);
-        std::map<std::string, float>::iterator tname_it = variables.find(tname);
-        if (tname_it == variables.end()) {
-            printf("undefined variable \%s\n", tname.c_str());
-            exit(1);
-        } 
-        else return tname_it->second;
+    int pushConst(pANTLR3_BASE_TREE tree) {
+        double value = atof((const char*) tree->toString(tree)->chars);
+        return expression.pushConst(value);
     }
     
-    static void add_var(pANTLR3_BASE_TREE t, float v) {
-        variables[std::string((const char *) t->toString(t)->chars)] = v;
+    int pushVariable(pANTLR3_BASE_TREE tree) {
+        std::string varname((const char*) tree->toString(tree)->chars);
+        int variable_count = interpreter.getVariableCount(varname);
+        return expression.pushVariable(variable_count);
     }
+    
+    void assigmentVariable(pANTLR3_BASE_TREE tree) {
+        std::string varname((const char*) tree->toString(tree)->chars);
+        interpreter.assigmentVariable(varname, expression.getExpressionName());
+        interpreter.setExpression(expression.getCode());
+        expression.newExpression();
+    }
+    
+    void printExpression() {
+        
+    }
+    
+    void scanVariable(pANTLR3_BASE_TREE tree) {
+        std::string varname((const char*) tree->toString(tree)->chars);
+        interpreter.scanVariable(varname);
+    }
+    
 }
-axiom : (line)+;
+
+axiom : (line)+ {std::cout<<interpreter.getCode();};
 
 line
-    : ^(ASSIGMENT VARIABLE a=arith_expr) {add_var((pANTLR3_BASE_TREE) $VARIABLE, a);}
-    | ^(PRINT_KEYW a=arith_expr)         {printf("\%f\n", a);}
+    : ^(ASSIGMENT VARIABLE a=arith_expr) { assigmentVariable($VARIABLE); }
+    | ^(PRINT_KEYW a=arith_expr)         { printExpression();            }
+    | ^(SCAN_KEYW VARIABLE)              { scanVariable($VARIABLE);      }
     ;
 
-arith_expr returns [float value]
-    : ^(PLS e1=arith_expr {value  = e1;} (e2=arith_expr {value += e2;})?)
-    | ^(MNS e1=arith_expr {value -= e1;} (e2=arith_expr {value = -value - e2;})?)
-    | ^(MLP e1=arith_expr e2=arith_expr) {value = e1 * e2;}
-    | ^(DIV e1=arith_expr e2=arith_expr) {value = e1 / e2;}
-    | ^(PWR e1=arith_expr e2=arith_expr) {value = pow(e1, e2);}
-    | INT   {pANTLR3_BASE_TREE a = (pANTLR3_BASE_TREE)$INT;   value = atof((const char*) a->toString(a)->chars);}
-    | FLOAT {pANTLR3_BASE_TREE a = (pANTLR3_BASE_TREE)$FLOAT; value = atof((const char*) a->toString(a)->chars);}
-    | VARIABLE {value = get_var((pANTLR3_BASE_TREE) $VARIABLE);}
+arith_expr returns [int pos]
+    : ^(PLS e1=arith_expr {pos = e1;} (e2=arith_expr { pos = expression.add(pos, e2); })?)
+    | ^(MNS e1=arith_expr {pos = expression.changeSign(e1);} (e2=arith_expr { pos = expression.sub(pos, e2); })?)
+    | ^(MLP e1=arith_expr e2=arith_expr) {pos = expression.mul(e1, e2);}
+    | ^(DIV e1=arith_expr e2=arith_expr) {pos = expression.div(e1, e2);}
+    | ^(PWR e1=arith_expr e2=arith_expr) {pos = expression.pow(e1, e2);}
+    | INT   { pos = pushConst($INT); }
+    | FLOAT { pos = pushConst($FLOAT); }
+    | VARIABLE { pos = pushVariable($VARIABLE);}
     ;
 

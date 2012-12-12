@@ -17,6 +17,7 @@ PWR :  '^' ;
 
 ASSIGMENT : '=' ;
 PRINT_KEYW : 'print' ;
+SCAN_KEYW  : 'scan' ;
 
 SEP : '\n' | ';' ;
 
@@ -32,10 +33,11 @@ fragment SS : 'a'..'z' | 'A'..'Z' | '_' ;
 
 axiom : lines EOF! ;
 lines : line SEP! lines? ;
-line  : (def_var | print_expr)? ;
+line  : (def_var | print_expr | scan_expr)? ;
 
 def_var    : VARIABLE ASSIGMENT^ arith_expr ;
 print_expr : PRINT_KEYW^ arith_expr ;
+scan_expr  : SCAN_KEYW^ VARIABLE ;
 
 arith_expr : ((PLS|MNS)^)? term ((PLS|MNS)^ term)*;
 term       : power ((MLP|DIV)^ power )*;
