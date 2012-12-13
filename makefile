@@ -17,7 +17,3 @@ build:
 	antlr3 -o $(grammar_code_path) $(grammar_names)
 	g++ $(cflags) -o compiler compiler.cpp $(grammar_code_names) $(assembler_code_names)
 
-compile:
-	nasm -f elf64 exec.asm
-	ld -lc -lm -m elf_x86_64 -I/lib/ld-linux-x86-64.so.2 exec.o -o exec
-

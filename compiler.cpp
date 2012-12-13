@@ -34,13 +34,44 @@ int main(int argc, char * argv[]) {
     tree   = parser->axiom(parser).tree;
     nodes  = antlr3CommonTreeNodeStreamNewTree(tree, ANTLR3_SIZE_HINT);
     walker = ArithmeticInterpreterTreeNew(nodes);
-    
+   
+    std::ostringstream stream;
+    std::string nasm_file_name;
+    std::string object_file_name;
+    std::string nasm_command;
+    std::string ld_command;
+    std::string rm_command;
+
+    stream << argv[2] << ".asm";
+    nasm_file_name = stream.str();
+    stream.str(std::string());
+
+    stream << argv[2] << ".o";
+    object_file_name = stream.str();
+    stream.str(std::string());
+
+    stream << "nasm -f elf64 " << nasm_file_name;
+    nasm_command = stream.str();
+    stream.str(std::string());
+
+    stream << "ld -lc -lm -m elf_x86_64 -I/lib/ld-linux-x86-64.so.2 " << object_file_name << " -o " << argv[2];
+    ld_command = stream.str();
+    stream.str(std::string());
+
+    stream << "rm -f " << nasm_file_name << " " << object_file_name;
+    rm_command = stream.str();
+    stream.str(std::string());
+
     std::string code = walker->axiom(walker);
     std::ofstream nasm_file;
-    nasm_file.open(argv[2]);
+    nasm_file.open(nasm_file_name.c_str());
     nasm_file << code;
     nasm_file.close();
     
+    system(nasm_command.c_str());
+    system(ld_command.c_str());
+    system(rm_command.c_str());
+
     walker ->free(walker);
     nodes  ->free(nodes);
     parser ->free(parser);
@@ -49,3 +80,4 @@ int main(int argc, char * argv[]) {
     input  ->close(input);
     return 0;
 }
+
