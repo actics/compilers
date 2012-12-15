@@ -1,4 +1,4 @@
-tree grammar ArithmeticInterpreterTree;
+tree grammar   ArithmeticInterpreterTree;
 
 options {
     tokenVocab = ArithmeticInterpreter;
@@ -13,17 +13,17 @@ options {
     #include <string>
     #include <sstream>
     #include <map>
-    #include "./../../assembler/ArithmeticExpressionAssembler.hpp"
     #include "./../../assembler/ArithmeticAssembler.hpp"
+    #include "./../../assembler/CompilerAssembler.hpp"
 }
 
 @members {
-    ArithmeticExpressionAssembler expression;
-    ArithmeticInterpreterAssembler interpreter;
+    ArithmeticAssembler expression;
+    CompilerAssembler interpreter;
     
-    void pushConst(pANTLR3_BASE_TREE tree) {
+    void pushConstant(pANTLR3_BASE_TREE tree) {
         double value = atof((const char*) tree->toString(tree)->chars);
-        expression.pushConst(value);
+        expression.pushConstant(value);
     }
     
     void pushVariable(pANTLR3_BASE_TREE tree) {
@@ -34,14 +34,12 @@ options {
     
     void assigmentVariable(pANTLR3_BASE_TREE tree) {
         std::string varname((const char*) tree->toString(tree)->chars);
-        interpreter.assigmentVariable(varname, expression.getExpressionName());
-        interpreter.setExpression(expression.getCode());
+        interpreter.assigmentVariable(varname, expression.getCode());
         expression.newExpression();
     }
     
     void printExpression() {
-        interpreter.printExpression(expression.getExpressionName());
-        interpreter.setExpression(expression.getCode());
+        interpreter.printExpression(expression.getCode());
         expression.newExpression();
     }
     
@@ -54,10 +52,14 @@ options {
 
 axiom returns [std::string code] : (line)+ {code = interpreter.getCode();};
 
+code_block:
+    (line)+ ; 
+
 line
     : ^(ASSIGMENT VARIABLE arith_expr) { assigmentVariable($VARIABLE); }
     | ^(PRINT_KEYW arith_expr)         { printExpression();            }
     | ^(SCAN_KEYW VARIABLE)            { scanVariable($VARIABLE);      }
+    | ^(WHILE_KEYWORD logic_expr code_block)
     ;
 
 arith_expr
@@ -66,8 +68,18 @@ arith_expr
     | ^(MLP arith_expr arith_expr) { expression.mul(); }
     | ^(DIV arith_expr arith_expr) { expression.div(); }
     | ^(PWR arith_expr arith_expr) { expression.pow(); }
-    | INT      { pushConst($INT);         }
-    | FLOAT    { pushConst($FLOAT);       }
+    | INT      { pushConstant($INT);      }
+    | FLOAT    { pushConstant($FLOAT);    }
     | VARIABLE { pushVariable($VARIABLE); }
     ;
 
+logic_expr
+    : ^(OR  logic_expr logic_expr)
+    | ^(AND logic_expr logic_expr)
+    | ^(LSS arith_expr arith_expr)
+    | ^(LSQ arith_expr arith_expr)
+    | ^(GRT arith_expr arith_expr)
+    | ^(GRQ arith_expr arith_expr)
+    | ^(EQL arith_expr arith_expr)
+    | ^(NEQ arith_expr arith_expr)
+    ;

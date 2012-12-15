@@ -1,24 +1,28 @@
 #pragma once
 
+#include <cstdio>
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <map>
 
-class ArithmeticInterpreterAssembler {
+class ArithmeticAssembler {
     private:
-        int stack_count;
-        std::string expressions;
-        std::ostringstream code;
-        std::map<std::string, int> variables;
-        
+       int count;
+       std::ostringstream code;
+       void action(std::string);
+
     public:
-        ArithmeticInterpreterAssembler();
-        ~ArithmeticInterpreterAssembler();
-        void setExpression(std::string);
-        int getVariableCount(std::string);
-        void scanVariable(std::string);
-        void assigmentVariable(std::string, std::string);
-        void printExpression(std::string);
+        ArithmeticAssembler();
+        ~ArithmeticAssembler();
+        void newExpression();
         std::string getCode();
+        void pushConstant(double);
+        void pushVariable(int);
+        void changeSign(int);
+        void add();
+        void sub();
+        void mul();
+        void div();
+        void pow();
 };

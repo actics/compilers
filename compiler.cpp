@@ -32,6 +32,8 @@ int main(int argc, char * argv[]) {
     parser = ArithmeticInterpreterParserNew(tokens);
 
     tree   = parser->axiom(parser).tree;
+    std::cout<< "< " << (const char *) tree->toStringTree(tree)->chars << " >" << std::endl;
+//    exit(0);
     nodes  = antlr3CommonTreeNodeStreamNewTree(tree, ANTLR3_SIZE_HINT);
     walker = ArithmeticInterpreterTreeNew(nodes);
    
@@ -70,7 +72,7 @@ int main(int argc, char * argv[]) {
     
     system(nasm_command.c_str());
     system(ld_command.c_str());
-    system(rm_command.c_str());
+ //   system(rm_command.c_str());
 
     walker ->free(walker);
     nodes  ->free(nodes);

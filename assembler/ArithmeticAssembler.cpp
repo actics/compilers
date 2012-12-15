@@ -1,79 +1,68 @@
 #include "ArithmeticAssembler.hpp"
 
-ArithmeticInterpreterAssembler::~ArithmeticInterpreterAssembler() {}
+ArithmeticAssembler::~ArithmeticAssembler() {}
 
-ArithmeticInterpreterAssembler::ArithmeticInterpreterAssembler() {
-    this->stack_count = 0;
+ArithmeticAssembler::ArithmeticAssembler() {
+    this->count = 0;
 }
 
-int ArithmeticInterpreterAssembler::getVariableCount(std::string varname) {
-    std::map<std::string, int>::iterator varname_iterator = this->variables.find(varname);
-    if (varname_iterator != this->variables.end()) {
-        return varname_iterator->second;
-    }
-    else {
-        return -1;
-    }
+void ArithmeticAssembler::newExpression() {
+    this->count = 0;
+    this->code.str(std::string());
 }
 
-void ArithmeticInterpreterAssembler::setExpression(std::string expression) {
-    this->expressions += expression;
+std::string ArithmeticAssembler::getCode() {
+    this->code << "mov rax, qword [rsp-8]" << std::endl;
+    return this->code.str();
 }
 
-std::string ArithmeticInterpreterAssembler::getCode() {
-    std::ostringstream head;
-    head << "[bits 64]"             << std::endl;
-    head << "global _start"         << std::endl;
-    head << "extern scanf"          << std::endl;
-    head << "extern printf"         << std::endl;
-    head << "extern pow"            << std::endl;
-    head << "section .bss"          << std::endl;
-    head << "variables resq " << this->stack_count << std::endl;
-    head << "section .data"         << std::endl;
-    head << "scanf_format db  '\%lf', 0" << std::endl;
-    head << "printf_format db '\%lf', 10, 0" << std::endl;
-    head << "section .text"         << std::endl;
-    head << this->expressions;
-    head << "_start:"               << std::endl;
-    head << "mov rbp, rsp"          << std::endl;
-    head << "sub rsp, 0x20"         << std::endl;
-    
-    std::ostringstream tail;
-    tail << "mov rax, 60" << std::endl;
-    tail << "mov rdi, 0"  << std::endl;
-    tail << "syscall"     << std::endl;
-    
-    return head.str() + this->code.str() + tail.str();
+void ArithmeticAssembler::action(std::string action) {
+    this->code << "fld  qword [rsp-8*" << this->count-1 << "]" << std::endl;
+    this->code << "f" << action << " qword [rsp-8*" << this->count << "]" << std::endl;
+    this->code << "fstp qword [rsp-8*" << this->count-1 << "]" << std::endl;
+    this->count--;
 }
 
-void ArithmeticInterpreterAssembler::scanVariable(std::string varname) {
-    int variable_count = this->getVariableCount(varname);
-    if (variable_count < 0) {
-        this->variables[varname] = this->stack_count;
-        variable_count = this->stack_count++;
-    }
-    this->code << "lea rsi, [variables+8*" << variable_count << "]" << std::endl;
-    this->code << "mov rdi, scanf_format" << std::endl;
-    this->code << "xor rax, rax" << std::endl;
-    this->code << "call scanf"   << std::endl;
+void ArithmeticAssembler::pushConstant(double value) {
+    char buffer[20];
+    sprintf(buffer, "%#llx", *(long long int *) &value);
+    this->code << "mov rax, " << buffer << std::endl;
+    this->code << "mov qword [rsp-8*" << ++this->count << "], rax" << std::endl;
 }
 
-void ArithmeticInterpreterAssembler::assigmentVariable(std::string varname, std::string function_name) {
-    int variable_count = this->getVariableCount(varname);
-    if (variable_count < 0) {
-        this->variables[varname] = this->stack_count;
-        variable_count = this->stack_count++;
-    }
-    this->code << "call " << function_name << std::endl;
-    this->code << "mov qword [variables+8*" << variable_count << "], rax" << std::endl;
+void ArithmeticAssembler::pushVariable(int variable_count) {
+    this->code << "mov r15, [variables+8*" << variable_count << "]" << std::endl;
+    this->code << "mov qword [rsp-8*" << ++this->count << "], r15" << std::endl;
 }
 
-void ArithmeticInterpreterAssembler::printExpression(std::string function_name) {
-    this->code << "call " << function_name << std::endl;
-    this->code << "mov [rsp-8], rax" << std::endl;
-    this->code << "movsd xmm0, [rsp-8]" << std::endl;
-    this->code << "mov rdi, printf_format" << std::endl;
-    this->code << "mov rax, 1" << std::endl;
-    this->code << "call printf" << std::endl;
+void ArithmeticAssembler::changeSign(int target) {
+    this->code << "fld  qword [rsp-8*" << this->count - target << "]" << std::endl;
+    this->code << "fchs" << std::endl;
+    this->code << "fstp qword [rsp-8*" << this->count - target << "]" << std::endl;
+}
+
+void ArithmeticAssembler::add() {
+    this->action("add");
+}
+
+void ArithmeticAssembler::sub() {
+    this->changeSign(1);
+    this->action("sub");
+}
+
+void ArithmeticAssembler::mul() {
+    this->action("mul");
+}
+
+void ArithmeticAssembler::div() {
+    this->action("div");
+}
+
+void ArithmeticAssembler::pow() {
+    this->code << "movsd xmm0, qword [rsp-8*" << this->count-1 << "]" << std::endl;
+    this->code << "movsd xmm1, qword [rsp-8*" << this->count   << "]" << std::endl;
+    this->code << "call pow" << std::endl;
+    this->code << "movsd qword [rsp-8*" << this->count-1 << "], xmm0" << std::endl;
+    this->count--;
 }
 

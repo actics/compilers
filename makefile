@@ -9,7 +9,7 @@ grammar_code_suffixes = Lexer.c Parser.c Tree.c
 grammar_code_names = $(addprefix $(grammar_code_path)grammar/$(program_name), $(grammar_code_suffixes))
 
 assembler_path = ./assembler/
-assembler_names = ArithmeticExpressionAssembler.cpp ArithmeticAssembler.cpp
+assembler_names = CompilerAssembler.cpp ArithmeticAssembler.cpp
 assembler_code_names = $(addprefix $(assembler_path), $(assembler_names))
 
 
