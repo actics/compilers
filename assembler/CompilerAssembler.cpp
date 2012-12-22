@@ -3,7 +3,13 @@
 CompilerAssembler::~CompilerAssembler() {}
 
 CompilerAssembler::CompilerAssembler() {
-    this->stack_count = 0;
+    this->stack_count    = 0;
+    this->variable_count = 0;
+}
+
+void CompilerAssembler::refreshStack(const int &stack_count) {
+    if (stack_count > this->stack_count)
+        this->stack_count = stack_count;
 }
 
 int CompilerAssembler::getVariableCount(std::string varname) {
@@ -24,14 +30,16 @@ std::string CompilerAssembler::getCode() {
     head << "extern printf"         << std::endl;
     head << "extern pow"            << std::endl;
     head << "section .bss"          << std::endl;
-    head << "variables resq " << this->stack_count << std::endl;
-    head << "section .data"         << std::endl;
-    head << "scanf_format db  '\%lf', 0" << std::endl;
+    head << "variables resq " << this->variable_count << std::endl;
+    head << "section .data"                  << std::endl;
+    head << "scanf_format db  '\%lf', 0"     << std::endl;
     head << "printf_format db '\%lf', 10, 0" << std::endl;
     head << "section .text"         << std::endl;
     head << "_start:"               << std::endl;
     head << "mov rbp, rsp"          << std::endl;
-    head << "sub rsp, 0x20"         << std::endl;
+    int stack_count  = this->stack_count;
+    stack_count      += this->stack_count & 1 ? 1 : 0;
+    head << "sub rsp, 8*" << stack_count << std::endl;
     
     std::ostringstream tail;
     tail << "mov rax, 60" << std::endl;
@@ -42,31 +50,31 @@ std::string CompilerAssembler::getCode() {
 }
 
 void CompilerAssembler::scanVariable(std::string varname) {
-    int variable_count = this->getVariableCount(varname);
-    if (variable_count < 0) {
-        this->variables[varname] = this->stack_count;
-        variable_count = this->stack_count++;
+    int variable_number = this->getVariableCount(varname);
+    if (variable_number < 0) {
+        this->variables[varname] = this->variable_count;
+        variable_number = this->variable_count++;
     }
-    this->code << "lea rsi, [variables+8*" << variable_count << "]" << std::endl;
+    this->code << "lea rsi, [variables+8*" << variable_number << "]" << std::endl;
     this->code << "mov rdi, scanf_format" << std::endl;
     this->code << "xor rax, rax" << std::endl;
     this->code << "call scanf"   << std::endl;
 }
 
 void CompilerAssembler::assigmentVariable(std::string varname, std::string expression) {
-    int variable_count = this->getVariableCount(varname);
-    if (variable_count < 0) {
-        this->variables[varname] = this->stack_count;
-        variable_count = this->stack_count++;
+    int variable_number = this->getVariableCount(varname);
+    if (variable_number < 0) {
+        this->variables[varname] = this->variable_count;
+        variable_number = this->variable_count++;
     }
     this->code << expression << std::endl;
-    this->code << "mov qword [variables+8*" << variable_count << "], rax" << std::endl;
+    this->code << "mov rax, [rsp]" << std::endl;
+    this->code << "mov qword [variables+8*" << variable_number << "], rax" << std::endl;
 }
 
 void CompilerAssembler::printExpression(std::string expression) {
     this->code << expression << std::endl;
-    this->code << "mov [rsp-8], rax" << std::endl;
-    this->code << "movsd xmm0, [rsp-8]" << std::endl;
+    this->code << "movsd xmm0, [rsp]" << std::endl;
     this->code << "mov rdi, printf_format" << std::endl;
     this->code << "mov rax, 1" << std::endl;
     this->code << "call printf" << std::endl;

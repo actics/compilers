@@ -9,12 +9,15 @@
 class ArithmeticAssembler {
     private:
        int count;
+       int max_count;
        std::ostringstream code;
        void action(std::string);
 
     public:
         ArithmeticAssembler();
         ~ArithmeticAssembler();
+        void checkMaximum();
+        int getCount();
         void newExpression();
         std::string getCode();
         void pushConstant(double);

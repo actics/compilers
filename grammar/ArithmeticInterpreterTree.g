@@ -35,11 +35,13 @@ options {
     void assigmentVariable(pANTLR3_BASE_TREE tree) {
         std::string varname((const char*) tree->toString(tree)->chars);
         interpreter.assigmentVariable(varname, expression.getCode());
+        interpreter.refreshStack( expression.getCount() );
         expression.newExpression();
     }
     
     void printExpression() {
         interpreter.printExpression(expression.getCode());
+        interpreter.refreshStack( expression.getCount() );
         expression.newExpression();
     }
     
